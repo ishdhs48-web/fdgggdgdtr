@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FULL CONTROL - Полный доступ к ПК</title>
+<link rel="stylesheet" href="/styles.css" />
+<style>
+  .full-layout {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .full-sidebar {
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 0;
+    gap: 8px;
+  }
+  
+  .full-nav-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: all var(--transition-normal);
+    font-size: 18px;
+  }
+  
+  .full-nav-btn:hover {
+    background: var(--panel-hover);
+    border-color: var(--border-light);
+    color: var(--text-primary);
+  }
+  
+  .full-nav-btn.active {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    color: var(--accent-light);
+  }
+  
+  .full-main {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--bg-primary);
+  }
+  
+  .full-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .full-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--danger);
+  }
+  
+  .full-content {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .terminal-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .terminal-output {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-secondary);
+    background: var(--bg-primary);
+    white-space: pre-wrap;
+  }
+  
+  .terminal-input-container {
+    display: flex;
+    gap: 10px;
+    padding: 16px 20px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+  }
+  
+  .terminal-prompt {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-weight: 700;
+  }
+  
+  .terminal-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--panel);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    outline: none;
+  }
+  
+  .terminal-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-bg);
+  }
+  
+  .exec-full-btn {
+    padding: 10px 18px;
+    border: 1px solid var(--danger);
+    border-radius: var(--radius-md);
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+  }
+  
+  .exec-full-btn:hover {
+    background: var(--danger);
+    color: white;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+  }
+  
+  .warning-banner {
+    background: var(--danger-bg);
+    border: 1px solid var(--danger);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    margin: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--danger);
+    font-size: 13px;
+  }
+  
+  .warning-icon {
+    font-size: 20px;
+  }
+  
+  .confirm-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    display: grid;
+    place-items: center;
+    z-index: 1000;
+  }
+  
+  .confirm-card {
+    background: var(--panel);
+    border: 1px solid var(--danger);
+    border-radius: var(--radius-xl);
+    padding: 24px;
+    max-width: 400px;
+    text-align: center;
+  }
+  
+  .confirm-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--danger);
+    margin-bottom: 12px;
+  }
+  
+  .confirm-text {
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+  
+  .confirm-command {
+    font-family: var(--font-mono);
+    background: var(--bg-primary);
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    margin: 12px 0;
+    color: var(--text-primary);
+    word-break: break-all;
+  }
+  
+  .confirm-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+  
+  .btn-confirm {
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+  }
+  
+  .btn-confirm.danger {
+    background: var(--danger);
+    color: white;
+    border: 1px solid var(--danger);
+  }
+  
+  .btn-confirm.danger:hover {
+    background: #dc2626;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+  }
+  
+  .btn-confirm.cancel {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+  
+  .btn-confirm.cancel:hover {
+    background: var(--panel-hover);
+    color: var(--text-primary);
+  }
+  
+  .file-explorer {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .file-path {
+    padding: 12px 20px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .file-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 20px;
+  }
+  
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  
+  .file-item:hover {
+    background: var(--panel-hover);
+  }
+  
+  .file-icon {
+    font-size: 16px;
+  }
+  
+  .file-name {
+    flex: 1;
+    font-size: 13px;
+  }
+  
+  .file-size {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  
+  .file-actions {
+    display: flex;
+    gap: 6px;
+  }
+  
+  .file-action-btn {
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--panel);
+    color: var(--text-secondary);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  
+  .file-action-btn:hover {
+    background: var(--panel-hover);
+    color: var(--text-primary);
+  }
+  
+  .file-action-btn.danger:hover {
+    background: var(--danger-bg);
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+</style>
+</head>
+<body>
+<div class="full-layout">
+  <!-- Sidebar -->
+  <aside class="full-sidebar">
+    <button class="full-nav-btn active" data-section="terminal" title="Терминал">💻</button>
+    <button class="full-nav-btn" data-section="files" title="Файлы">📁</button>
+    <button class="full-nav-btn" data-section="processes" title="Процессы">🔄</button>
+    <button class="full-nav-btn" data-section="system" title="Система">⚙️</button>
+    <button class="full-nav-btn" data-section="chat" title="Чат">💬</button>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="full-main">
+    <!-- Terminal Section -->
+    <div class="full-content" id="terminal-section">
+      <div class="full-header">
+        <h2 class="full-title">💻 FULL TERMINAL</h2>
+        <button class="btn btn-secondary" onclick="window.open('/', '_self')">← Назад</button>
+      </div>
+      
+      <div class="warning-banner">
+        <span class="warning-icon">⚠️</span>
+        <span><strong>ВНИМАНИЕ!</strong> Вы находитесь в режиме ПОЛНОГО ДОСТУПА. Все команды будут выполнены на вашем ПК.</span>
+      </div>
+      
+      <div class="terminal-container">
+        <div class="terminal-output" id="terminalOutput">
+🔥 Добро пожаловать в режим ПОЛНОГО КОНТРОЛЯ!
+💡 Введите команду для выполнения на вашем ПК.
+📌 Примеры: dir, ls, cd, cat file.txt, npm start, и т.д.
+
+</div>
+        <div class="terminal-input-container">
+          <span class="terminal-prompt">root@pc:~$</span>
+          <input type="text" id="fullCommandInput" class="terminal-input" placeholder="Введите команду..." autocomplete="off" />
+          <button class="exec-full-btn" id="execFullCommand">▶ Выполнить</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Files Section -->
+    <div class="full-content" id="files-section" hidden>
+      <div class="full-header">
+        <h2 class="full-title">📁 FILE EXPLORER</h2>
+        <button class="btn btn-secondary" onclick="window.open('/', '_self')">← Назад</button>
+      </div>
+      
+      <div class="warning-banner">
+        <span class="warning-icon">⚠️</span>
+        <span><strong>ВНИМАНИЕ!</strong> Вы можете читать, создавать и удалять файлы.</span>
+      </div>
+      
+      <div class="file-explorer">
+        <div class="file-path">
+          <span class="terminal-prompt">📁 Текущая папка:</span>
+          <span id="currentPath">/</span>
+        </div>
+        <div class="file-list" id="fileList">
+          Загрузка...
+        </div>
+      </div>
+    </div>
+
+    <!-- Processes Section -->
+    <div class="full-content" id="processes-section" hidden>
+      <div class="full-header">
+        <h2 class="full-title">🔄 PROCESS MANAGER</h2>
+        <button class="btn btn-secondary" onclick="window.open('/', '_self')">← Назад</button>
+      </div>
+      
+      <div class="warning-banner">
+        <span class="warning-icon">⚠️</span>
+        <span><strong>ВНИМАНИЕ!</strong> Вы можете запускать и останавливать процессы.</span>
+      </div>
+      
+      <div class="terminal-container">
+        <div class="terminal-output" id="processList">
+          Загрузка списка процессов...
+        </div>
+        <div class="terminal-input-container">
+          <span class="terminal-prompt">🔄 Управление:</span>
+          <input type="text" id="processNameInput" class="terminal-input" placeholder="Имя процесса или PID" />
+          <select id="processAction" class="terminal-input">
+            <option value="list">Список процессов</option>
+            <option value="kill">Убить процесс</option>
+            <option value="start">Запустить процесс</option>
+          </select>
+          <button class="exec-full-btn" id="execProcessAction">▶ Выполнить</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Section -->
+    <div class="full-content" id="system-section" hidden>
+      <div class="full-header">
+        <h2 class="full-title">⚙️ SYSTEM INFO</h2>
+        <button class="btn btn-secondary" onclick="window.open('/', '_self')">← Назад</button>
+      </div>
+      
+      <div class="terminal-container">
+        <div class="terminal-output" id="systemInfo">
+          Загрузка системной информации...
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Section -->
+    <div class="full-content" id="chat-section" hidden>
+      <div class="full-header">
+        <h2 class="full-title">💬 AI ЧАТ</h2>
+        <button class="btn btn-secondary" onclick="window.open('/', '_self')">← Назад</button>
+      </div>
+      <iframe src="/" frameborder="0" style="width: 100%; height: 100%;"></iframe>
+    </div>
+  </main>
+</div>
+
+<!-- Confirm Modal -->
+<div class="confirm-modal" id="confirmModal" hidden>
+  <div class="confirm-card">
+    <div class="confirm-title" id="confirmTitle">⚠️ ПОДТВЕРДИТЕ ДЕЙСТВИЕ</div>
+    <div class="confirm-text" id="confirmText">Вы уверены, что хотите выполнить эту команду?</div>
+    <div class="confirm-command" id="confirmCommand"></div>
+    <div class="confirm-buttons">
+      <button class="btn-confirm cancel" id="cancelConfirm">Отмена</button>
+      <button class="btn-confirm danger" id="executeConfirm">ВЫПОЛНИТЬ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// State
+let currentPath = '/';
+let pendingCommand = null;
+let pendingAction = null;
+
+// DOM
+const sections = {
+  terminal: document.getElementById('terminal-section'),
+  files: document.getElementById('files-section'),
+  processes: document.getElementById('processes-section'),
+  system: document.getElementById('system-section'),
+  chat: document.getElementById('chat-section')
+};
+
+const navButtons = document.querySelectorAll('.full-nav-btn');
+const terminalOutput = document.getElementById('terminalOutput');
+const fullCommandInput = document.getElementById('fullCommandInput');
+const execFullCommand = document.getElementById('execFullCommand');
+const fileList = document.getElementById('fileList');
+const currentPathEl = document.getElementById('currentPath');
+const processList = document.getElementById('processList');
+const processNameInput = document.getElementById('processNameInput');
+const processAction = document.getElementById('processAction');
+const execProcessAction = document.getElementById('execProcessAction');
+const systemInfo = document.getElementById('systemInfo');
+
+// Modal
+const confirmModal = document.getElementById('confirmModal');
+const confirmTitle = document.getElementById('confirmTitle');
+const confirmText = document.getElementById('confirmText');
+const confirmCommand = document.getElementById('confirmCommand');
+const cancelConfirm = document.getElementById('cancelConfirm');
+const executeConfirm = document.getElementById('executeConfirm');
+
+// Navigation
+function switchSection(section) {
+  navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.section === section));
+  Object.keys(sections).forEach(key => sections[key].hidden = key !== section);
+  
+  if (section === 'files') loadFiles(currentPath);
+  if (section === 'processes') loadProcesses();
+  if (section === 'system') loadSystemInfo();
+}
+
+navButtons.forEach(btn => {
+  btn.addEventListener('click', () => switchSection(btn.dataset.section));
+});
+
+// Terminal
+async function executeFullCommand(cmd) {
+  try {
+    addOutput(`$ ${cmd}`);
+    
+    const res = await fetch('/api/pc/full', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ command: cmd, confirm: true }),
+    });
+    
+    const data = await res.json();
+    
+    if (data.error) {
+      if (data.dangerous) {
+        // Show confirmation modal
+        pendingCommand = cmd;
+        confirmTitle.textContent = '⚠️ ОПАСНАЯ КОМАНДА!';
+        confirmText.textContent = 'Эта команда может повредить вашу систему. Вы уверены?';
+        confirmCommand.textContent = cmd;
+        confirmModal.hidden = false;
+        return;
+      }
+      addOutput(`❌ Ошибка: ${data.error}`);
+    } else {
+      addOutput(data.output || 'Команда выполнена успешно');
+    }
+  } catch (err) {
+    addOutput(`❌ Ошибка: ${err.message}`);
+  }
+}
+
+function addOutput(text) {
+  const line = document.createElement('div');
+  line.textContent = text;
+  terminalOutput.appendChild(line);
+  terminalOutput.scrollTop = terminalOutput.scrollHeight;
+}
+
+execFullCommand.addEventListener('click', () => {
+  const cmd = fullCommandInput.value.trim();
+  if (cmd) {
+    executeFullCommand(cmd);
+    fullCommandInput.value = '';
+  }
+});
+
+fullCommandInput.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Enter') {
+    ev.preventDefault();
+    const cmd = fullCommandInput.value.trim();
+    if (cmd) {
+      executeFullCommand(cmd);
+      fullCommandInput.value = '';
+    }
+  }
+});
+
+// Confirm Modal
+cancelConfirm.addEventListener('click', () => {
+  confirmModal.hidden = true;
+  pendingCommand = null;
+});
+
+executeConfirm.addEventListener('click', async () => {
+  confirmModal.hidden = true;
+  if (pendingCommand) {
+    await executeFullCommand(pendingCommand);
+    pendingCommand = null;
+  }
+  if (pendingAction) {
+    await executeAction(pendingAction);
+    pendingAction = null;
+  }
+});
+
+// Files
+async function loadFiles(path) {
+  try {
+    const res = await fetch('/api/pc/file', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'list', path }),
+    });
+    const data = await res.json();
+    
+    if (data.error) {
+      fileList.innerHTML = `<div class="file-item">❌ Ошибка: ${data.error}</div>`;
+      return;
+    }
+    
+    fileList.innerHTML = data.files.map(f => `
+      <div class="file-item" data-path="${f.path}" data-name="${f.name}" data-isdir="${f.isDirectory}">
+        <span class="file-icon">${f.isDirectory ? '📁' : '📄'}</span>
+        <span class="file-name">${f.name}${f.isDirectory ? '/' : ''}</span>
+        <span class="file-size">${f.isDirectory ? '' : formatBytes(f.size)}</span>
+        <div class="file-actions">
+          ${f.isDirectory ? '<button class="file-action-btn" onclick="openDir(this)">📂</button>' : ''}
+          <button class="file-action-btn" onclick="readFile(this)">👁️</button>
+          <button class="file-action-btn" onclick="editFile(this)">✏️</button>
+          <button class="file-action-btn danger" onclick="deleteFile(this)">🗑️</button>
+        </div>
+      </div>
+    `).join('');
+    
+    currentPathEl.textContent = path || '/';
+  } catch (err) {
+    fileList.innerHTML = `<div class="file-item">❌ Ошибка: ${err.message}</div>`;
+  }
+}
+
+function openDir(btn) {
+  const path = btn.closest('.file-item').dataset.path;
+  currentPath = path;
+  loadFiles(path);
+  switchSection('files');
+}
+
+async function readFile(btn) {
+  const path = btn.closest('.file-item').dataset.path;
+  const name = btn.closest('.file-item').dataset.name;
+  
+  try {
+    const res = await fetch('/api/pc/file', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'read', path }),
+    });
+    const data = await res.json();
+    
+    if (data.error) {
+      addOutput(`❌ Ошибка чтения ${name}: ${data.error}`);
+      return;
+    }
+    
+    switchSection('terminal');
+    addOutput(`📄 Содержимое файла: ${name}`);
+    addOutput('='.repeat(50));
+    addOutput(data.content);
+    addOutput('='.repeat(50));
+  } catch (err) {
+    addOutput(`❌ Ошибка: ${err.message}`);
+  }
+}
+
+async function editFile(btn) {
+  const path = btn.closest('.file-item').dataset.path;
+  const name = btn.closest('.file-item').dataset.name;
+  const newContent = prompt(`Введите новое содержимое для ${name}:`, '');
+  
+  if (newContent !== null) {
+    pendingAction = { action: 'write', path, content: newContent };
+    confirmTitle.textContent = '⚠️ ЗАПИСЬ В ФАЙЛ!';
+    confirmText.textContent = `Вы уверены, что хотите перезаписать файл ${name}?`;
+    confirmCommand.textContent = `write ${path}`;
+    confirmModal.hidden = false;
+  }
+}
+
+async function deleteFile(btn) {
+  const path = btn.closest('.file-item').dataset.path;
+  const name = btn.closest('.file-item').dataset.name;
+  
+  pendingAction = { action: 'delete', path };
+  confirmTitle.textContent = '⚠️ УДАЛЕНИЕ ФАЙЛА!';
+  confirmText.textContent = `Вы УВЕРЕНЫ, что хотите удалить файл ${name}? Это необратимо!`;
+  confirmCommand.textContent = `delete ${path}`;
+  confirmModal.hidden = false;
+}
+
+async function executeAction(action) {
+  try {
+    const res = await fetch('/api/pc/file', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ ...action, confirm: true }),
+    });
+    const data = await res.json();
+    
+    if (data.error) {
+      if (data.warning) {
+        pendingAction = action;
+        confirmTitle.textContent = '⚠️ ПОДТВЕРДИТЕ!';
+        confirmText.textContent = data.warning;
+        confirmCommand.textContent = JSON.stringify(action);
+        confirmModal.hidden = false;
+        return;
+      }
+      addOutput(`❌ Ошибка: ${data.error}`);
+    } else {
+      addOutput(`✅ ${data.message || 'Действие выполнено'}`);
+      loadFiles(currentPath);
+    }
+  } catch (err) {
+    addOutput(`❌ Ошибка: ${err.message}`);
+  }
+}
+
+// Processes
+async function loadProcesses() {
+  try {
+    const res = await fetch('/api/pc/process', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'list' }),
+    });
+    const data = await res.json();
+    
+    if (data.error) {
+      processList.innerHTML = `❌ Ошибка: ${data.error}`;
+      return;
+    }
+    
+    processList.innerHTML = `<pre>${data.processes}</pre>`;
+  } catch (err) {
+    processList.innerHTML = `❌ Ошибка: ${err.message}`;
+  }
+}
+
+execProcessAction.addEventListener('click', async () => {
+  const action = processAction.value;
+  const name = processNameInput.value.trim();
+  
+  if (!name && action !== 'list') {
+    alert('Введите имя процесса или PID');
+    return;
+  }
+  
+  if (action === 'kill') {
+    pendingAction = { action, name };
+    confirmTitle.textContent = '⚠️ УБИЙСТВО ПРОЦЕССА!';
+    confirmText.textContent = `Вы УВЕРЕНЫ, что хотите убить процесс ${name}?`;
+    confirmCommand.textContent = `kill ${name}`;
+    confirmModal.hidden = false;
+    return;
+  }
+  
+  await executeProcessAction({ action, name });
+});
+
+async function executeProcessAction(params) {
+  try {
+    const res = await fetch('/api/pc/process', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ ...params, confirm: true }),
+    });
+    const data = await res.json();
+    
+    if (data.error) {
+      if (data.warning) {
+        pendingAction = params;
+        confirmTitle.textContent = '⚠️ ПОДТВЕРДИТЕ!';
+        confirmText.textContent = data.warning;
+        confirmCommand.textContent = JSON.stringify(params);
+        confirmModal.hidden = false;
+        return;
+      }
+      processList.innerHTML += `\n❌ Ошибка: ${data.error}`;
+    } else {
+      processList.innerHTML += `\n✅ ${data.message || 'Действие выполнено'}`;
+      if (params.action === 'kill' || params.action === 'start') {
+        setTimeout(loadProcesses, 1000);
+      }
+    }
+  } catch (err) {
+    processList.innerHTML += `\n❌ Ошибка: ${err.message}`;
+  }
+}
+
+// System
+async function loadSystemInfo() {
+  try {
+    const res = await fetch('/api/pc/system');
+    const data = await res.json();
+    
+    systemInfo.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+  } catch (err) {
+    systemInfo.innerHTML = `❌ Ошибка: ${err.message}`;
+  }
+}
+
+// Utils
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+}
+
+// Initialize
+loadFiles('/');
+loadProcesses();
+loadSystemInfo();
+switchSection('terminal');
+</script>
+</body>
+</html>

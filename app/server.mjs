@@ -253,6 +253,234 @@ const server = http.createServer(async (req, res) => {
 
     // ===== PC Control API =====
 
+    // Full Access Mode - Execute ANY command
+    if (pathname === '/api/pc/full' && req.method === 'POST') {
+      const body = await readBody(req);
+      const command = String(body.command || '');
+      const confirm = body.confirm || false;
+      
+      if (!command.trim()) return json(res, 400, { error: 'command required' });
+      
+      // Dangerous commands require explicit confirmation
+      const dangerousPatterns = [
+        /\brm\s/,
+        /\bdel\s/,
+        /\bdelete\s/,
+        /\bformat\s/,
+        /\bdd\s/,
+        /\b:.*\\$/,  // Format drive
+        /\b>\s*null/,
+        /\bchmod\s/,
+        /\bchown\s/,
+        /\bshutdown/,
+        /\breboot/,
+        /\bpkill/,
+        /\bkill\s/,
+      ];
+      
+      const isDangerous = dangerousPatterns.some(p => p.test(command.toLowerCase()));
+      
+      if (isDangerous && !confirm) {
+        return json(res, 403, { 
+          error: 'ОПАСНАЯ КОМАНДА!',
+          command,
+          warning: 'Эта команда может повредить систему. Для выполнения отправьте confirm: true',
+          dangerous: true
+        });
+      }
+      
+      try {
+        const { stdout, stderr } = await execAsync(command, { 
+          timeout: 30000,
+          maxBuffer: 1024 * 1024 * 10  // 10MB
+        });
+        
+        return json(res, 200, {
+          success: true,
+          command,
+          output: stdout || stderr || 'Команда выполнена успешно',
+          timestamp: new Date().toISOString()
+        });
+      } catch (e) {
+        return json(res, 500, {
+          error: String(e.message || e),
+          command,
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+
+    // Full Access - File operations
+    if (pathname === '/api/pc/file' && req.method === 'POST') {
+      const body = await readBody(req);
+      const action = String(body.action || '');
+      const filePath = String(body.path || '');
+      const content = body.content || '';
+      const confirm = body.confirm || false;
+      
+      if (!action || !filePath) return json(res, 400, { error: 'action and path required' });
+      
+      // Security: prevent path traversal
+      const normalizedPath = path.normalize(filePath);
+      if (normalizedPath.includes('..') || normalizedPath.startsWith('/')) {
+        return json(res, 403, { error: 'Invalid path' });
+      }
+      
+      const fullPath = path.join(process.cwd(), normalizedPath);
+      
+      try {
+        switch (action) {
+          case 'read':
+            if (!fs.existsSync(fullPath)) {
+              return json(res, 404, { error: 'File not found', path: filePath });
+            }
+            const stats = fs.statSync(fullPath);
+            if (!stats.isFile()) {
+              return json(res, 400, { error: 'Not a file', path: filePath });
+            }
+            const fileContent = fs.readFileSync(fullPath, 'utf8');
+            return json(res, 200, {
+              success: true,
+              action: 'read',
+              path: filePath,
+              content: fileContent,
+              size: stats.size,
+              modified: stats.mtime
+            });
+          
+          case 'write':
+            if (!confirm) {
+              return json(res, 403, {
+                error: 'ПИСЬМО В ФАЙЛ!',
+                action,
+                path: filePath,
+                warning: 'Для записи в файл отправьте confirm: true'
+              });
+            }
+            fs.writeFileSync(fullPath, content, 'utf8');
+            return json(res, 200, {
+              success: true,
+              action: 'write',
+              path: filePath,
+              message: 'Файл успешно записан'
+            });
+          
+          case 'delete':
+            if (!confirm) {
+              return json(res, 403, {
+                error: 'УДАЛЕНИЕ ФАЙЛА!',
+                action,
+                path: filePath,
+                warning: 'Для удаления файла отправьте confirm: true'
+              });
+            }
+            if (fs.existsSync(fullPath)) {
+              fs.unlinkSync(fullPath);
+              return json(res, 200, {
+                success: true,
+                action: 'delete',
+                path: filePath,
+                message: 'Файл удален'
+              });
+            }
+            return json(res, 404, { error: 'File not found', path: filePath });
+          
+          case 'list':
+            const files = fs.readdirSync(fullPath).map(f => {
+              const fp = path.join(fullPath, f);
+              const stat = fs.statSync(fp);
+              return {
+                name: f,
+                path: path.join(filePath, f),
+                isDirectory: stat.isDirectory(),
+                size: stat.size,
+                modified: stat.mtime
+              };
+            });
+            return json(res, 200, {
+              success: true,
+              action: 'list',
+              path: filePath,
+              files
+            });
+          
+          default:
+            return json(res, 400, { error: 'Unknown action', action });
+        }
+      } catch (e) {
+        return json(res, 500, {
+          error: String(e.message || e),
+          action,
+          path: filePath
+        });
+      }
+    }
+
+    // Full Access - Process management
+    if (pathname === '/api/pc/process' && req.method === 'POST') {
+      const body = await readBody(req);
+      const action = String(body.action || '');
+      const processName = String(body.name || '');
+      const pid = body.pid ? Number(body.pid) : null;
+      const confirm = body.confirm || false;
+      
+      if (!action) return json(res, 400, { error: 'action required' });
+      
+      try {
+        switch (action) {
+          case 'list':
+            if (os.platform() === 'win32') {
+              const { stdout } = await execAsync('tasklist /FO JSON');
+              return json(res, 200, { success: true, processes: stdout });
+            } else {
+              const { stdout } = await execAsync('ps aux');
+              return json(res, 200, { success: true, processes: stdout });
+            }
+          
+          case 'kill':
+            if (!pid && !processName) return json(res, 400, { error: 'pid or name required' });
+            if (!confirm) {
+              return json(res, 403, {
+                error: 'УБИЙСТВО ПРОЦЕССА!',
+                action,
+                pid,
+                name: processName,
+                warning: 'Для убийства процесса отправьте confirm: true'
+              });
+            }
+            if (pid) {
+              if (os.platform() === 'win32') {
+                await execAsync(`taskkill /PID ${pid} /F`);
+              } else {
+                await execAsync(`kill -9 ${pid}`);
+              }
+              return json(res, 200, { success: true, action: 'kill', pid, message: 'Процесс убит' });
+            } else {
+              if (os.platform() === 'win32') {
+                await execAsync(`taskkill /IM ${processName} /F`);
+              } else {
+                await execAsync(`pkill -9 ${processName}`);
+              }
+              return json(res, 200, { success: true, action: 'kill', name: processName, message: 'Процесс убит' });
+            }
+          
+          case 'start':
+            if (!processName) return json(res, 400, { error: 'name required' });
+            if (os.platform() === 'win32') {
+              await execAsync(`start ${processName}`);
+            } else {
+              await execAsync(processName);
+            }
+            return json(res, 200, { success: true, action: 'start', name: processName, message: 'Процесс запущен' });
+          
+          default:
+            return json(res, 400, { error: 'Unknown action', action });
+        }
+      } catch (e) {
+        return json(res, 500, { error: String(e.message || e) });
+      }
+    }
+
     if (pathname === '/api/pc/system' && req.method === 'GET') {
       try {
         const systemInfo = {
