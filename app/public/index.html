@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Agent - Full PC Control</title>
+<link rel="stylesheet" href="/styles.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <div class="brand-info">
+        <div class="brand-name">AI AGENT</div>
+        <div class="brand-sub" id="accountLine">Full PC Control</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <button class="quick-btn" id="newChatBtn" title="Новый чат">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        <span>Новый чат</span>
+      </button>
+      <button class="quick-btn" id="pcControlBtn" title="Управление ПК">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+        <span>ПК Контроль</span>
+      </button>
+    </div>
+
+    <!-- Models Section -->
+    <div class="section-head">
+      <span>МОДЕЛИ</span>
+      <span class="badge" id="modelCount">0</span>
+    </div>
+    <div class="model-list" id="modelList"></div>
+
+    <!-- Sessions Section -->
+    <div class="section-head">
+      <span>ЧАТЫ</span>
+    </div>
+    <div class="session-list" id="sessionList"></div>
+
+    <!-- System Info -->
+    <div class="system-info" id="systemInfo">
+      <div class="info-item">
+        <span class="info-label">СИСТЕМА</span>
+        <span class="info-value" id="systemStatus">✓ Онлайн</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Chat Area -->
+  <main class="chat">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="model-pill" id="activeModel">—</div>
+        <div class="model-meta" id="activeMeta"></div>
+      </div>
+      <div class="topbar-right">
+        <label class="toggle" title="Deep thinking">
+          <input type="checkbox" id="thinkingToggle" />
+          <span>🧠</span>
+        </label>
+        <label class="toggle" title="Smart Search">
+          <input type="checkbox" id="searchToggle" checked />
+          <span>🔍</span>
+        </label>
+        <button class="icon-btn" id="settingsBtn" title="Настройки">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Messages Area -->
+    <div class="messages" id="messages">
+      <div class="empty" id="emptyState">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M17 21l-5-5-5 5V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <div class="empty-title">Добро пожаловать!</div>
+        <div class="empty-sub">Выберите модель слева и начните чат</div>
+      </div>
+    </div>
+
+    <!-- PC Control Panel (Hidden by default) -->
+    <div class="pc-panel" id="pcPanel" hidden>
+      <div class="pc-header">
+        <h3>🖥️ Управление ПК</h3>
+        <button class="close-btn" id="closePCPanel">×</button>
+      </div>
+      <div class="pc-content">
+        <div class="pc-section">
+          <h4>Команды</h4>
+          <div class="pc-commands">
+            <div class="pc-cmd">
+              <button class="cmd-btn" data-cmd="system_info">📊 Системная информация</button>
+            </div>
+            <div class="pc-cmd">
+              <button class="cmd-btn" data-cmd="processes">🔄 Процессы</button>
+            </div>
+            <div class="pc-cmd">
+              <button class="cmd-btn" data-cmd="files">📁 Файлы</button>
+            </div>
+            <div class="pc-cmd">
+              <button class="cmd-btn" data-cmd="network">🌐 Сеть</button>
+            </div>
+          </div>
+        </div>
+        <div class="pc-section">
+          <h4>Выполнить команду</h4>
+          <div class="pc-input">
+            <input type="text" id="pcCommandInput" placeholder="Введите команду..." />
+            <button class="exec-btn" id="execPCCommand">▶ Выполнить</button>
+          </div>
+        </div>
+        <div class="pc-section">
+          <h4>Результат</h4>
+          <pre class="pc-output" id="pcOutput">Готов к выполнению...</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Composer -->
+    <form class="composer" id="composer">
+      <textarea id="input" rows="1" placeholder="Напишите сообщение... (Enter — отправить, Shift+Enter — новая строка)"></textarea>
+      <button type="submit" id="sendBtn" class="send" aria-label="Отправить">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+      </button>
+    </form>
+  </main>
+</div>
+
+<!-- Token Modal -->
+<div class="modal" id="tokenModal" hidden>
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>🔑 Авторизация</h3>
+      <button class="close-btn" id="closeTokenModal">×</button>
+    </div>
+    <div class="modal-body">
+      <p>Введите токен от <strong>chat.deepseek.com</strong></p>
+      <p class="modal-hint">Откройте DevTools → Console и выполните:</p>
+      <pre class="snippet" id="snippet">JSON.parse(localStorage.getItem('userToken')).value</pre>
+      <textarea id="tokenInput" class="token-input" placeholder="Вставьте токен сюда..." spellcheck="false"></textarea>
+      <div class="modal-error" id="tokenError"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="tokenSave">Сохранить токен</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal" id="settingsModal" hidden>
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>⚙️ Настройки</h3>
+      <button class="close-btn" id="closeSettingsModal">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="setting-group">
+        <h4>Модель по умолчанию</h4>
+        <select id="defaultModelSelect" class="setting-input">
+        </select>
+      </div>
+      <div class="setting-group">
+        <label class="setting-checkbox">
+          <input type="checkbox" id="defaultThinkingSetting" />
+          <span>Deep Thinking по умолчанию</span>
+        </label>
+      </div>
+      <div class="setting-group">
+        <label class="setting-checkbox">
+          <input type="checkbox" id="defaultSearchSetting" />
+          <span>Smart Search по умолчанию</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="closeSettingsBtn">Закрыть</button>
+      <button class="btn btn-primary" id="saveSettingsBtn">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

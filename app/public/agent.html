@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PC Agent - Full Control</title>
+<link rel="stylesheet" href="/styles.css" />
+<style>
+  /* Agent-specific styles */
+  .agent-layout {
+    display: grid;
+    grid-template-columns: 60px 280px 1fr;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .agent-sidebar {
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 0;
+    gap: 8px;
+  }
+  
+  .agent-nav-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: all var(--transition-normal);
+    font-size: 18px;
+  }
+  
+  .agent-nav-btn:hover {
+    background: var(--panel-hover);
+    border-color: var(--border-light);
+    color: var(--text-primary);
+  }
+  
+  .agent-nav-btn.active {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    color: var(--accent-light);
+  }
+  
+  .agent-main {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--bg-primary);
+  }
+  
+  .agent-content {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .agent-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .agent-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  
+  .agent-section {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+  
+  .control-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  
+  .control-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+  }
+  
+  .control-card:hover {
+    background: var(--panel-hover);
+    border-color: var(--border-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .control-card.active {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+  }
+  
+  .control-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+  
+  .control-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  
+  .terminal {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-secondary);
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+  }
+  
+  .terminal-input {
+    display: flex;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+  }
+  
+  .terminal-input input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--panel);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    outline: none;
+  }
+  
+  .terminal-input input:focus {
+    border-color: var(--accent);
+  }
+  
+  .file-explorer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  
+  .file-item:hover {
+    background: var(--panel-hover);
+  }
+  
+  .file-icon {
+    font-size: 16px;
+  }
+  
+  .file-name {
+    flex: 1;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .status-bar {
+    padding: 10px 24px;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  
+  .process-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .process-item {
+    display: grid;
+    grid-template-columns: 40px 1fr 80px 80px;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--panel);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  
+  .process-item:hover {
+    background: var(--panel-hover);
+  }
+</style>
+</head>
+<body>
+<div class="agent-layout">
+  <!-- Navigation Sidebar -->
+  <aside class="agent-sidebar">
+    <button class="agent-nav-btn active" data-section="dashboard" title="Дашборд">🏠</button>
+    <button class="agent-nav-btn" data-section="terminal" title="Терминал">💻</button>
+    <button class="agent-nav-btn" data-section="files" title="Файлы">📁</button>
+    <button class="agent-nav-btn" data-section="processes" title="Процессы">🔄</button>
+    <button class="agent-nav-btn" data-section="system" title="Система">⚙️</button>
+    <button class="agent-nav-btn" data-section="chat" title="Чат">💬</button>
+  </aside>
+
+  <!-- Main Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <div class="brand-info">
+        <div class="brand-name">PC AGENT</div>
+        <div class="brand-sub">Full Control</div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <span>МОДЕЛИ</span>
+      <span class="badge" id="modelCount">0</span>
+    </div>
+    <div class="model-list" id="modelList"></div>
+
+    <div class="section-head">
+      <span>ЧАТЫ</span>
+    </div>
+    <div class="session-list" id="sessionList"></div>
+
+    <div class="system-info">
+      <div class="info-item">
+        <span class="info-label">СИСТЕМА</span>
+        <span class="info-value" id="systemStatus">✓ Онлайн</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="agent-main">
+    <div class="agent-content">
+      <!-- Dashboard Section -->
+      <div class="agent-section" id="dashboard-section">
+        <div class="agent-header">
+          <h2 class="agent-title">🏠 Дашборд</h2>
+        </div>
+        <div class="control-grid">
+          <div class="control-card" data-action="system_info">
+            <div class="control-icon">📊</div>
+            <div class="control-label">Системная информация</div>
+          </div>
+          <div class="control-card" data-action="cpu_info">
+            <div class="control-icon">⚡</div>
+            <div class="control-label">Использование CPU</div>
+          </div>
+          <div class="control-card" data-action="memory_info">
+            <div class="control-icon">🧠</div>
+            <div class="control-label">Использование памяти</div>
+          </div>
+          <div class="control-card" data-action="disk_info">
+            <div class="control-icon">💾</div>
+            <div class="control-label">Дисковое пространство</div>
+          </div>
+          <div class="control-card" data-action="network_info">
+            <div class="control-icon">🌐</div>
+            <div class="control-label">Сетевая информация</div>
+          </div>
+          <div class="control-card" data-action="processes">
+            <div class="control-icon">🔄</div>
+            <div class="control-label">Активные процессы</div>
+          </div>
+        </div>
+        <div class="terminal" id="dashboard-output">
+Выберите действие для отображения информации о системе.
+        </div>
+      </div>
+
+      <!-- Terminal Section -->
+      <div class="agent-section" id="terminal-section" hidden>
+        <div class="agent-header">
+          <h2 class="agent-title">💻 Терминал</h2>
+        </div>
+        <div class="terminal" id="terminal-output">
+Готов к выполнению команд...
+        </div>
+        <div class="terminal-input">
+          <input type="text" id="terminal-input" placeholder="Введите команду..." />
+          <button class="exec-btn" id="exec-terminal">▶</button>
+        </div>
+      </div>
+
+      <!-- Files Section -->
+      <div class="agent-section" id="files-section" hidden>
+        <div class="agent-header">
+          <h2 class="agent-title">📁 Файловый менеджер</h2>
+        </div>
+        <div class="file-explorer" id="file-explorer">
+          <div class="file-item" data-path="/">
+            <span class="file-icon">📁</span>
+            <span class="file-name">Корневой каталог</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Processes Section -->
+      <div class="agent-section" id="processes-section" hidden>
+        <div class="agent-header">
+          <h2 class="agent-title">🔄 Менеджер процессов</h2>
+          <button class="btn btn-primary" id="refresh-processes">🔄 Обновить</button>
+        </div>
+        <div class="process-list" id="process-list">
+          Загрузка...
+        </div>
+      </div>
+
+      <!-- System Section -->
+      <div class="agent-section" id="system-section" hidden>
+        <div class="agent-header">
+          <h2 class="agent-title">⚙️ Системная информация</h2>
+        </div>
+        <div class="terminal" id="system-info-output">
+Загрузка...
+        </div>
+      </div>
+
+      <!-- Chat Section -->
+      <div class="agent-section" id="chat-section" hidden>
+        <div class="agent-header">
+          <h2 class="agent-title">💬 Чат с AI</h2>
+        </div>
+        <div class="messages" id="agent-messages">
+          <div class="empty">
+            <div class="empty-title">Начните чат</div>
+            <div class="empty-sub">Выберите модель и начните общение</div>
+          </div>
+        </div>
+        <form class="composer" id="agent-composer">
+          <textarea id="agent-input" rows="1" placeholder="Напишите сообщение..."></textarea>
+          <button type="submit" class="send">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </div>
+    
+    <div class="status-bar">
+      <div class="status-item">
+        <span class="status-dot"></span>
+        <span>Агент активен</span>
+      </div>
+      <div class="status-item">
+        <span id="current-time">00:00:00</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Token Modal -->
+<div class="modal" id="tokenModal" hidden>
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>🔑 Авторизация</h3>
+      <button class="close-btn" id="closeTokenModal">×</button>
+    </div>
+    <div class="modal-body">
+      <p>Введите токен от <strong>chat.deepseek.com</strong></p>
+      <p class="modal-hint">Откройте DevTools → Console и выполните:</p>
+      <pre class="snippet" id="snippet">JSON.parse(localStorage.getItem('userToken')).value</pre>
+      <textarea id="tokenInput" class="token-input" placeholder="Вставьте токен сюда..." spellcheck="false"></textarea>
+      <div class="modal-error" id="tokenError"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="tokenSave">Сохранить токен</button>
+    </div>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+<script>
+// Agent-specific functionality
+const agentState = {
+  currentSection: 'dashboard',
+  currentPath: '/',
+  processes: [],
+};
+
+const agentUI = {
+  navButtons: document.querySelectorAll('.agent-nav-btn'),
+  sections: {
+    dashboard: document.getElementById('dashboard-section'),
+    terminal: document.getElementById('terminal-section'),
+    files: document.getElementById('files-section'),
+    processes: document.getElementById('processes-section'),
+    system: document.getElementById('system-section'),
+    chat: document.getElementById('chat-section'),
+  },
+  dashboardOutput: document.getElementById('dashboard-output'),
+  terminalOutput: document.getElementById('terminal-output'),
+  terminalInput: document.getElementById('terminal-input'),
+  execTerminal: document.getElementById('exec-terminal'),
+  fileExplorer: document.getElementById('file-explorer'),
+  processList: document.getElementById('process-list'),
+  refreshProcesses: document.getElementById('refresh-processes'),
+  systemInfoOutput: document.getElementById('system-info-output'),
+  currentTime: document.getElementById('current-time'),
+  agentMessages: document.getElementById('agent-messages'),
+  agentComposer: document.getElementById('agent-composer'),
+  agentInput: document.getElementById('agent-input'),
+};
+
+// Navigation
+function switchSection(section) {
+  agentState.currentSection = section;
+  
+  // Update nav buttons
+  agentUI.navButtons.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.section === section);
+  });
+  
+  // Show/hide sections
+  Object.keys(agentUI.sections).forEach(key => {
+    agentUI.sections[key].hidden = key !== section;
+  });
+  
+  // Load section data
+  if (section === 'system') {
+    loadSystemInfo();
+  } else if (section === 'processes') {
+    loadProcesses();
+  } else if (section === 'files') {
+    loadFiles('/');
+  }
+}
+
+// Load system info
+async function loadSystemInfo() {
+  try {
+    const res = await fetch('/api/pc/system');
+    const data = await res.json();
+    agentUI.systemInfoOutput.textContent = JSON.stringify(data, null, 2);
+  } catch (err) {
+    agentUI.systemInfoOutput.textContent = `Ошибка: ${err.message}`;
+  }
+}
+
+// Load processes
+async function loadProcesses() {
+  try {
+    const res = await fetch('/api/pc/execute', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ command: 'processes' }),
+    });
+    const data = await res.json();
+    agentUI.processList.innerHTML = data.output || 'Нет процессов';
+  } catch (err) {
+    agentUI.processList.innerHTML = `Ошибка: ${err.message}`;
+  }
+}
+
+// Load files
+async function loadFiles(path) {
+  try {
+    const res = await fetch('/api/pc/execute', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ command: `files?path=${encodeURIComponent(path)}` }),
+    });
+    const data = await res.json();
+    // Parse files and display
+    const files = data.output ? data.output.split('\n') : [];
+    agentUI.fileExplorer.innerHTML = files.map(f => `
+      <div class="file-item" data-path="${path}/${f}">
+        <span class="file-icon">📄</span>
+        <span class="file-name">${f}</span>
+      </div>
+    `).join('');
+  } catch (err) {
+    agentUI.fileExplorer.innerHTML = `<div class="file-item">Ошибка: ${err.message}</div>`;
+  }
+}
+
+// Execute command
+async function executeAgentCommand(cmd) {
+  try {
+    const res = await fetch('/api/pc/execute', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ command: cmd }),
+    });
+    const data = await res.json();
+    return data.output || data.error || 'Команда выполнена';
+  } catch (err) {
+    return `Ошибка: ${err.message}`;
+  }
+}
+
+// Update time
+function updateTime() {
+  const now = new Date();
+  agentUI.currentTime.textContent = now.toLocaleTimeString();
+}
+
+// Initialize
+function initAgent() {
+  // Navigation
+  agentUI.navButtons.forEach(btn => {
+    btn.addEventListener('click', () => switchSection(btn.dataset.section));
+  });
+  
+  // Terminal
+  agentUI.execTerminal.addEventListener('click', async () => {
+    const cmd = agentUI.terminalInput.value.trim();
+    if (cmd) {
+      agentUI.terminalOutput.textContent += `\n$ ${cmd}\n`;
+      const result = await executeAgentCommand(cmd);
+      agentUI.terminalOutput.textContent += `${result}\n`;
+      agentUI.terminalInput.value = '';
+      agentUI.terminalOutput.scrollTop = agentUI.terminalOutput.scrollHeight;
+    }
+  });
+  
+  agentUI.terminalInput.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      agentUI.execTerminal.click();
+    }
+  });
+  
+  // Processes
+  agentUI.refreshProcesses.addEventListener('click', loadProcesses);
+  
+  // Dashboard actions
+  document.querySelectorAll('.control-card').forEach(card => {
+    card.addEventListener('click', async () => {
+      const action = card.dataset.action;
+      document.querySelectorAll('.control-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      
+      let output = '';
+      switch (action) {
+        case 'system_info':
+          output = await executeAgentCommand('system_info');
+          break;
+        case 'cpu_info':
+          output = 'CPU Information: Loaded';
+          break;
+        case 'memory_info':
+          output = 'Memory Information: Loaded';
+          break;
+        case 'disk_info':
+          output = 'Disk Information: Loaded';
+          break;
+        case 'network_info':
+          output = await executeAgentCommand('network');
+          break;
+        case 'processes':
+          output = await executeAgentCommand('processes');
+          break;
+      }
+      
+      agentUI.dashboardOutput.textContent = output;
+    });
+  });
+  
+  // Time update
+  updateTime();
+  setInterval(updateTime, 1000);
+  
+  // Load initial data
+  loadSystemInfo();
+}
+
+// Call init when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAgent);
+} else {
+  initAgent();
+}
+</script>
+</body>
+</html>

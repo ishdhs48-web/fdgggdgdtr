@@ -1,0 +1,13 @@
+{
+  "name": "deepseek-models-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Free chat with every model prompt in the parent folder, through the logged-in chat.deepseek.com web session (no API key).",
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "start": "node server.mjs"
+  }
+}

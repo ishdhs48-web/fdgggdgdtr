@@ -1,0 +1,10 @@
+{
+  "port": 8770,
+  "host": "127.0.0.1",
+  "token": "CRh7mA2iutnDEbnXsLQfY+2N5pm6yEn1quMZSOgM4s7rSzoRfiRGqklLlhr2U0Uk",
+  "deviceId": "abad8869-5fef-48de-ab73-e28678864c16",
+  "defaultModel": "gpt-6-astra",
+  "defaultThinking": false,
+  "defaultSearch": true,
+  "resendPromptEachTurn": false
+}

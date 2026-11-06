@@ -1,0 +1,48 @@
+{
+  "8fe38d2b-d13f-4f0e-b2d5-0653124cb98b": {
+    "id": "8fe38d2b-d13f-4f0e-b2d5-0653124cb98b",
+    "dsSessionId": "fe566c7b-9f9d-4c6b-aa8e-8a6d736d377c",
+    "modelId": "gpt-6-astra",
+    "title": "Финал: одна строка — как тебя зовут?",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Финал: одна строка — как тебя зовут?",
+        "at": 1793990588229
+      },
+      {
+        "role": "assistant",
+        "content": "Меня зовут Codex.",
+        "modelId": "gpt-6-astra",
+        "at": 1793990590128
+      }
+    ],
+    "lastMessageId": 2,
+    "promptSent": true,
+    "createdAt": 1793990588171,
+    "updatedAt": 1793990590128
+  },
+  "9aaba1c5-9a3e-4064-9ecc-4b099c1a972d": {
+    "id": "9aaba1c5-9a3e-4064-9ecc-4b099c1a972d",
+    "dsSessionId": "f2eb7b50-b8ab-4c95-b626-a169d220e17a",
+    "modelId": "gpt-6.1-terra",
+    "title": "Одна строка: имя модели + слово \"готов\".",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Одна строка: имя модели + слово \"готов\".",
+        "at": 1793990682176
+      },
+      {
+        "role": "assistant",
+        "content": "GPT-6 готова.",
+        "modelId": "gpt-6.1-terra",
+        "at": 1793990684032
+      }
+    ],
+    "lastMessageId": 2,
+    "promptSent": true,
+    "createdAt": 1793990682136,
+    "updatedAt": 1793990684032
+  }
+}
