@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>AI Agent - Full PC Control</title>
+<title>AI AGENT PRO - Full Control</title>
 <link rel="stylesheet" href="/styles.css" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="app">
@@ -13,12 +13,14 @@
   <aside class="sidebar">
     <div class="brand">
       <div class="logo">
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
         </svg>
       </div>
       <div class="brand-info">
-        <div class="brand-name">AI AGENT</div>
+        <div class="brand-name">AI AGENT PRO</div>
         <div class="brand-sub" id="accountLine">Full PC Control</div>
       </div>
     </div>
@@ -57,8 +59,12 @@
     <!-- System Info -->
     <div class="system-info" id="systemInfo">
       <div class="info-item">
-        <span class="info-label">СИСТЕМА</span>
+        <span class="info-label">СТАТУС</span>
         <span class="info-value" id="systemStatus">✓ Онлайн</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">ВЕРСИЯ</span>
+        <span class="info-value">PRO v2.0</span>
       </div>
     </div>
   </aside>
@@ -85,6 +91,14 @@
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
           </svg>
         </button>
+        <button class="icon-btn" id="agentModeBtn" title="Агент Mode">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </button>
       </div>
     </header>
 
@@ -92,61 +106,71 @@
     <div class="messages" id="messages">
       <div class="empty" id="emptyState">
         <div class="empty-icon">
-          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
+          <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1">
             <path d="M17 21l-5-5-5 5V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2z"/>
           </svg>
         </div>
-        <div class="empty-title">Добро пожаловать!</div>
-        <div class="empty-sub">её инструкции уедут в системный промпт, дальше — обычный чат</div>
+        <div class="empty-title">AI Агент готов помочь!</div>
+        <div class="empty-sub">её инструкции уедут в системный промпт • дальше — обычный чат</div>
+        <div class="empty-hint">Выберите модель слева и начните диалог</div>
       </div>
     </div>
 
-    <!-- PC Control Panel (Hidden by default) -->
+    <!-- PC Control Panel -->
     <div class="pc-panel" id="pcPanel" hidden>
       <div class="pc-header">
-        <h3>🖥️ Управление ПК</h3>
+        <h3>🖥️ УПРАВЛЕНИЕ ПК</h3>
         <button class="close-btn" id="closePCPanel">×</button>
       </div>
       <div class="pc-content">
         <div class="pc-section">
-          <h4>Команды</h4>
+          <h4>📊 БЫСТРЫЕ ДЕЙСТВИЯ</h4>
           <div class="pc-commands">
-            <div class="pc-cmd">
-              <button class="cmd-btn" data-cmd="system_info">📊 Системная информация</button>
-            </div>
-            <div class="pc-cmd">
-              <button class="cmd-btn" data-cmd="processes">🔄 Процессы</button>
-            </div>
-            <div class="pc-cmd">
-              <button class="cmd-btn" data-cmd="files">📁 Файлы</button>
-            </div>
-            <div class="pc-cmd">
-              <button class="cmd-btn" data-cmd="network">🌐 Сеть</button>
-            </div>
+            <button class="cmd-btn" data-cmd="system_info">
+              <span class="cmd-icon">💻</span>
+              <span class="cmd-text">Системная информация</span>
+            </button>
+            <button class="cmd-btn" data-cmd="processes">
+              <span class="cmd-icon">🔄</span>
+              <span class="cmd-text">Активные процессы</span>
+            </button>
+            <button class="cmd-btn" data-cmd="files">
+              <span class="cmd-icon">📁</span>
+              <span class="cmd-text">Файловая система</span>
+            </button>
+            <button class="cmd-btn" data-cmd="network">
+              <span class="cmd-icon">🌐</span>
+              <span class="cmd-text">Сетевые данные</span>
+            </button>
           </div>
         </div>
         <div class="pc-section">
-          <h4>Выполнить команду</h4>
+          <h4>⌨️ КОМАНДНАЯ СТРОКА</h4>
           <div class="pc-input">
-            <input type="text" id="pcCommandInput" placeholder="Введите команду..." />
+            <span class="prompt">$</span>
+            <input type="text" id="pcCommandInput" placeholder="Введите команду..." autocomplete="off" />
             <button class="exec-btn" id="execPCCommand">▶ Выполнить</button>
           </div>
         </div>
         <div class="pc-section">
-          <h4>Результат</h4>
-          <pre class="pc-output" id="pcOutput">Готов к выполнению...</pre>
+          <h4>📋 РЕЗУЛЬТАТ</h4>
+          <div class="pc-output" id="pcOutput">
+            <div class="output-line">Готов к выполнению команд...</div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Composer -->
     <form class="composer" id="composer">
-      <textarea id="input" rows="1" placeholder="Напишите сообщение... (Enter — отправить, Shift+Enter — новая строка)"></textarea>
-      <button type="submit" id="sendBtn" class="send" aria-label="Отправить">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-        </svg>
-      </button>
+      <div class="composer-wrapper">
+        <textarea id="input" rows="1" placeholder="Напишите сообщение... (Enter — отправить, Shift+Enter — новая строка)" autocomplete="off"></textarea>
+        <button type="submit" id="sendBtn" class="send" aria-label="Отправить">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+          </svg>
+        </button>
+      </div>
     </form>
   </main>
 </div>
@@ -155,11 +179,11 @@
 <div class="modal" id="tokenModal" hidden>
   <div class="modal-card">
     <div class="modal-header">
-      <h3>🔑 Авторизация</h3>
+      <h3>🔑 АВТОРИЗАЦИЯ</h3>
       <button class="close-btn" id="closeTokenModal">×</button>
     </div>
     <div class="modal-body">
-      <p>Введите токен от <strong>chat.deepseek.com</strong></p>
+      <p>Для работы с AI моделями требуется токен от <strong>chat.deepseek.com</strong></p>
       <p class="modal-hint">Откройте DevTools → Console и выполните:</p>
       <pre class="snippet" id="snippet">JSON.parse(localStorage.getItem('userToken')).value</pre>
       <textarea id="tokenInput" class="token-input" placeholder="Вставьте токен сюда..." spellcheck="false"></textarea>
@@ -175,12 +199,12 @@
 <div class="modal" id="settingsModal" hidden>
   <div class="modal-card">
     <div class="modal-header">
-      <h3>⚙️ Настройки</h3>
+      <h3>⚙️ НАСТРОЙКИ</h3>
       <button class="close-btn" id="closeSettingsModal">×</button>
     </div>
     <div class="modal-body">
       <div class="setting-group">
-        <h4>Модель по умолчанию</h4>
+        <h4>МОДЕЛЬ ПО УМОЛЧАНИЮ</h4>
         <select id="defaultModelSelect" class="setting-input">
         </select>
       </div>
@@ -196,10 +220,56 @@
           <span>Smart Search по умолчанию</span>
         </label>
       </div>
+      <div class="setting-group">
+        <label class="setting-checkbox">
+          <input type="checkbox" id="resendPromptSetting" />
+          <span>Отправлять промпт каждый раз</span>
+        </label>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" id="closeSettingsBtn">Закрыть</button>
       <button class="btn btn-primary" id="saveSettingsBtn">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Agent Info Modal -->
+<div class="modal" id="agentInfoModal" hidden>
+  <div class="modal-card agent-card">
+    <div class="modal-header">
+      <h3>🤖 AI AGENT PRO</h3>
+      <button class="close-btn" id="closeAgentInfo">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="agent-features">
+        <div class="feature">
+          <span class="feature-icon">🧠</span>
+          <span class="feature-text">Интеллектуальный чат с AI</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">💻</span>
+          <span class="feature-text">Управление ПК</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">📁</span>
+          <span class="feature-text">Работа с файлами</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">🔍</span>
+          <span class="feature-text">Smart Search</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">⚡</span>
+          <span class="feature-text">Deep Thinking</span>
+        </div>
+      </div>
+      <p class="agent-desc">
+        AI Агент использует системные инструкции из файлов моделей для обеспечения точных и контекстных ответов.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="closeAgentInfoBtn">Понятно</button>
     </div>
   </div>
 </div>

@@ -51,9 +51,16 @@ const ui = {
   closeSettingsBtn: el('closeSettingsBtn'),
   saveSettingsBtn: el('saveSettingsBtn'),
   settingsBtn: el('settingsBtn'),
+  agentModeBtn: el('agentModeBtn'),
   defaultModelSelect: el('defaultModelSelect'),
   defaultThinkingSetting: el('defaultThinkingSetting'),
   defaultSearchSetting: el('defaultSearchSetting'),
+  resendPromptSetting: el('resendPromptSetting'),
+  
+  // Agent Info Modal
+  agentInfoModal: el('agentInfoModal'),
+  closeAgentInfo: el('closeAgentInfo'),
+  closeAgentInfoBtn: el('closeAgentInfoBtn'),
   
   // System info
   systemStatus: el('systemStatus'),
@@ -202,7 +209,7 @@ function scrollToBottom() {
 function showPCPanel() {
   state.pcMode = true;
   ui.pcPanel.hidden = false;
-  ui.pcOutput.textContent = 'Готов к выполнению команд...';
+  ui.pcOutput.innerHTML = '<div class="output-line">Готов к выполнению команд...</div>';
   ui.pcCommandInput.value = '';
   ui.pcCommandInput.focus();
 }
@@ -214,7 +221,7 @@ function hidePCPanel() {
 
 async function executePCCommand(cmd) {
   try {
-    ui.pcOutput.textContent = 'Выполняется...';
+    ui.pcOutput.innerHTML = '<div class="output-line">Выполняется...</div>';
     
     const res = await fetch('/api/pc/execute', {
       method: 'POST',
@@ -225,12 +232,13 @@ async function executePCCommand(cmd) {
     const data = await res.json();
     
     if (data.error) {
-      ui.pcOutput.textContent = `Ошибка: ${data.error}`;
+      ui.pcOutput.innerHTML = `<div class="output-line">Ошибка: ${data.error}</div>`;
     } else {
-      ui.pcOutput.textContent = data.output || 'Команда выполнена успешно';
+      const lines = data.output ? data.output.split('\n').map(l => `<div class="output-line">${l}</div>`).join('') : '<div class="output-line">Команда выполнена успешно</div>';
+      ui.pcOutput.innerHTML = lines;
     }
   } catch (err) {
-    ui.pcOutput.textContent = `Ошибка: ${err.message}`;
+    ui.pcOutput.innerHTML = `<div class="output-line">Ошибка: ${err.message}</div>`;
   }
 }
 
@@ -358,6 +366,7 @@ async function loadState() {
   ui.searchToggle.checked = data.config?.defaultSearch !== false;
   ui.defaultThinkingSetting.checked = Boolean(data.config?.defaultThinking);
   ui.defaultSearchSetting.checked = data.config?.defaultSearch !== false;
+  ui.resendPromptSetting.checked = Boolean(data.config?.resendPromptEachTurn);
 
   if (data.user) {
     const name = data.user.id_profile?.name || data.user.email || 'connected';
@@ -410,7 +419,7 @@ ui.input.addEventListener('keydown', (ev) => {
 
 ui.input.addEventListener('input', () => {
   ui.input.style.height = 'auto';
-  ui.input.style.height = Math.min(ui.input.scrollHeight, 200) + 'px';
+  ui.input.style.height = Math.min(ui.input.scrollHeight, 180) + 'px';
 });
 
 // PC Control
@@ -436,6 +445,11 @@ document.querySelectorAll('.cmd-btn').forEach(btn => {
     const cmd = btn.dataset.cmd;
     executePCCommand(cmd);
   });
+});
+
+// Agent Mode Button
+ui.agentModeBtn.addEventListener('click', () => {
+  window.open('/agent.html', '_blank');
 });
 
 // Token Modal
@@ -479,6 +493,7 @@ ui.saveSettingsBtn.addEventListener('click', async () => {
     defaultModel: ui.defaultModelSelect.value,
     defaultThinking: ui.defaultThinkingSetting.checked,
     defaultSearch: ui.defaultSearchSetting.checked,
+    resendPromptEachTurn: ui.resendPromptSetting.checked,
   };
   
   await fetch('/api/settings', {
@@ -491,6 +506,15 @@ ui.saveSettingsBtn.addEventListener('click', async () => {
   loadState();
 });
 
+// Agent Info Modal
+ui.closeAgentInfo.addEventListener('click', () => {
+  ui.agentInfoModal.hidden = true;
+});
+
+ui.closeAgentInfoBtn.addEventListener('click', () => {
+  ui.agentInfoModal.hidden = true;
+});
+
 // Close modals on outside click
 ui.tokenModal.addEventListener('click', (ev) => {
   if (ev.target === ui.tokenModal) ui.tokenModal.hidden = true;
@@ -498,6 +522,10 @@ ui.tokenModal.addEventListener('click', (ev) => {
 
 ui.settingsModal.addEventListener('click', (ev) => {
   if (ev.target === ui.settingsModal) ui.settingsModal.hidden = true;
+});
+
+ui.agentInfoModal.addEventListener('click', (ev) => {
+  if (ev.target === ui.agentInfoModal) ui.agentInfoModal.hidden = true;
 });
 
 // Initialize
