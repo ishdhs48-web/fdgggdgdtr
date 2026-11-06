@@ -275,12 +275,46 @@ async function newChat() {
   ui.input.focus();
 }
 
+async function executeAgentCommand(cmd, sessionId = null) {
+  try {
+    const res = await fetch('/api/ai/execute', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ command: cmd, sessionId }),
+    });
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    return { error: err.message };
+  }
+}
+
+// Check if message contains command request
+function extractCommandRequest(message) {
+  const commands = ['system_info', 'processes', 'files', 'network', 'cpu_info', 'memory_info', 'list_files'];
+  const lowerMsg = message.toLowerCase();
+  
+  for (const cmd of commands) {
+    if (lowerMsg.includes(cmd) || 
+        (cmd === 'files' && (lowerMsg.includes('файл') || lowerMsg.includes('list files') || lowerMsg.includes('покажи файлы'))) ||
+        (cmd === 'processes' && (lowerMsg.includes('процесс') || lowerMsg.includes('запущен') || lowerMsg.includes('работает'))) ||
+        (cmd === 'system_info' && (lowerMsg.includes('систем') || lowerMsg.includes('информация') || lowerMsg.includes('компьютер'))) ||
+        (cmd === 'network' && (lowerMsg.includes('сеть') || lowerMsg.includes('ip') || lowerMsg.includes('интернет')))) {
+      return cmd;
+    }
+  }
+  return null;
+}
+
 async function send(message) {
   if (state.sending) return;
   if (!state.activeSessionId) await newChat();
   const session = activeSession();
   if (!session) return;
 
+  // Check if this is a command request
+  const detectedCommand = extractCommandRequest(message);
+  
   state.sending = true;
   ui.sendBtn.disabled = true;
 
@@ -322,6 +356,7 @@ async function send(message) {
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buf = '';
+    let fullResponse = '';
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
@@ -333,9 +368,53 @@ async function send(message) {
         if (!block.startsWith('data:')) continue;
         let evt;
         try { evt = JSON.parse(block.slice(5).trim()); } catch { continue; }
-        if (evt.type === 'delta') { text += evt.text; paint(false); }
+        if (evt.type === 'delta') { 
+          text += evt.text; 
+          fullResponse += evt.text;
+          paint(false); 
+        }
         else if (evt.type === 'error') { text += (text ? '\n\n' : '') + `[ошибка: ${evt.message}]`; paint(true); }
         else if (evt.type === 'done') paint(true);
+      }
+    }
+    
+    // After full response, check if AI wants to execute a command
+    if (detectedCommand && fullResponse) {
+      // Check if AI's response contains execution intent
+      const intentKeywords = ['выполняю', 'команда', 'проверяю', 'запускаю', 'получаю', 'показываю'];
+      const hasIntent = intentKeywords.some(kw => fullResponse.toLowerCase().includes(kw));
+      
+      if (hasIntent) {
+        setTimeout(async () => {
+          const result = await executeAgentCommand(detectedCommand, session.id);
+          if (result.success) {
+            const commandMsg = {
+              role: 'assistant',
+              content: `🔧 **Команда выполнена: ${detectedCommand}**\n\n📊 **Результат:**\n\n\`\`\`\n${result.result}\n\`\`\`\n\n${result.message || ''}`,
+              modelId: state.activeModelId,
+              at: Date.now(),
+              isCommandResult: true
+            };
+            session.messages.push(commandMsg);
+            session.updatedAt = Date.now();
+            renderSessions();
+            appendMessageDom('assistant', commandMsg.content, false);
+            scrollToBottom();
+          } else if (result.error) {
+            const errorMsg = {
+              role: 'assistant',
+              content: `❌ **Ошибка при выполнении команды "${detectedCommand}":** ${result.error}`,
+              modelId: state.activeModelId,
+              at: Date.now(),
+              isCommandResult: true
+            };
+            session.messages.push(errorMsg);
+            session.updatedAt = Date.now();
+            renderSessions();
+            appendMessageDom('assistant', errorMsg.content, false);
+            scrollToBottom();
+          }
+        }, 500);
       }
     }
   } catch (err) {

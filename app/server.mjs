@@ -352,6 +352,169 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    // ===== AI Agent API - Execute commands from AI =====
+    if (pathname === '/api/ai/execute' && req.method === 'POST') {
+      const body = await readBody(req);
+      const command = String(body.command || '');
+      const sessionId = body.sessionId || null;
+      
+      if (!command.trim()) return json(res, 400, { error: 'command required' });
+      
+      try {
+        // Security: Only allow safe commands
+        const safeCommands = ['system_info', 'processes', 'files', 'network', 'list_files', 'cpu_info', 'memory_info'];
+        if (safeCommands.includes(command)) {
+          let result = '';
+          
+          switch (command) {
+            case 'system_info':
+              result = JSON.stringify({
+                type: 'system_info',
+                data: {
+                  platform: os.platform(),
+                  arch: os.arch(),
+                  cpus: os.cpus().length,
+                  totalMemoryGB: Math.round(os.totalmem() / 1024 / 1024 / 1024),
+                  freeMemoryGB: Math.round(os.freemem() / 1024 / 1024 / 1024),
+                  hostname: os.hostname(),
+                  uptimeMinutes: Math.round(os.uptime() / 60),
+                  nodeVersion: process.version,
+                }
+              }, null, 2);
+              break;
+            case 'processes':
+              if (os.platform() === 'win32') {
+                const { stdout } = await execAsync('tasklist /FO CSV /NH');
+                result = stdout;
+              } else {
+                const { stdout } = await execAsync('ps aux --sort=-%mem | head -20');
+                result = stdout;
+              }
+              break;
+            case 'files':
+            case 'list_files':
+              const files = fs.readdirSync(process.cwd()).slice(0, 30);
+              result = files.join('\n');
+              break;
+            case 'network':
+              if (os.platform() === 'win32') {
+                const { stdout } = await execAsync('ipconfig');
+                result = stdout;
+              } else {
+                const { stdout } = await execAsync('ifconfig 2>/dev/null || ip addr');
+                result = stdout;
+              }
+              break;
+            case 'cpu_info':
+              result = JSON.stringify({
+                type: 'cpu_info',
+                data: os.cpus().map(c => ({
+                  model: c.model,
+                  speed: c.speed,
+                  times: c.times
+                }))
+              }, null, 2);
+              break;
+            case 'memory_info':
+              result = JSON.stringify({
+                type: 'memory_info',
+                data: {
+                  total: os.totalmem(),
+                  free: os.freemem(),
+                  used: os.totalmem() - os.freemem(),
+                  usagePercent: Math.round((1 - os.freemem() / os.totalmem()) * 100)
+                }
+              }, null, 2);
+              break;
+          }
+          
+          // Save to session if provided
+          if (sessionId && sessions[sessionId]) {
+            const aiMsg = {
+              role: 'assistant',
+              content: `Команда выполнена: ${command}\n\nРезультат:\n\n${result}`,
+              modelId: sessions[sessionId].modelId,
+              at: Date.now(),
+              isCommand: true,
+              command: command
+            };
+            sessions[sessionId].messages.push(aiMsg);
+            sessions[sessionId].updatedAt = Date.now();
+            persistSessions();
+          }
+          
+          return json(res, 200, { 
+            success: true, 
+            command, 
+            result,
+            message: `Команда "${command}" выполнена успешно` 
+          });
+        } else {
+          // For custom commands, add security checks
+          const allowedPatterns = [
+            /^ls\s/,
+            /^dir\s/,
+            /^cd\s/,
+            /^pwd/,
+            /^echo\s/,
+            /^cat\s/,
+            /^type\s/,
+            /^date/,
+            /^time/,
+            /^whoami/,
+            /^uname/,
+            /^df\s/,
+            /^free/,
+          ];
+          
+          const isAllowed = allowedPatterns.some(pattern => pattern.test(command.toLowerCase()));
+          
+          if (!isAllowed) {
+            return json(res, 400, { 
+              error: 'Команда не разрешена по соображениям безопасности',
+              suggestion: 'Используйте: system_info, processes, files, network'
+            });
+          }
+          
+          const { stdout, stderr } = await execAsync(command, { timeout: 15000 });
+          const output = stdout || stderr;
+          
+          return json(res, 200, { 
+            success: true, 
+            command, 
+            result: output,
+            message: `Команда "${command}" выполнена` 
+          });
+        }
+      } catch (e) {
+        return json(res, 500, { 
+          error: String(e.message || e), 
+          command 
+        });
+      }
+    }
+
+    // ===== AI Agent API - List available commands =====
+    if (pathname === '/api/ai/commands' && req.method === 'GET') {
+      return json(res, 200, {
+        commands: [
+          { name: 'system_info', description: 'Получить информацию о системе', safe: true },
+          { name: 'processes', description: 'Показать активные процессы', safe: true },
+          { name: 'files', description: 'Список файлов в текущей директории', safe: true },
+          { name: 'network', description: 'Сетевая информация', safe: true },
+          { name: 'cpu_info', description: 'Информация о процессоре', safe: true },
+          { name: 'memory_info', description: 'Информация о памяти', safe: true },
+        ],
+        capabilities: [
+          'Чат с AI',
+          'Выполнение команд на ПК',
+          'Анализ файлов',
+          'Управление процессами',
+          'Получение системной информации'
+        ]
+      });
+    }
+
     if (pathname === '/api/chat' && req.method === 'POST') {
       const body = await readBody(req);
       const session = sessions[body.sessionId];

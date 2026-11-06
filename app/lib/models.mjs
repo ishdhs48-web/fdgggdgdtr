@@ -36,7 +36,7 @@ export function listModels() {
   }
   return entries
     .filter((e) => e.isFile() && e.name.toLowerCase().endsWith('.md'))
-    .filter((e) => !/^readme/i.test(e.name) && !e.name.startsWith('_'))
+    .filter((e) => !/^readme/i.test(e.name) && !e.name.startsWith('_') && e.name !== 'agent-system.md')
     .map((e) => {
       const id = e.name.replace(/\.md$/i, '');
       const full = path.join(MODELS_DIR, e.name);
@@ -64,7 +64,19 @@ export function loadModelPrompt(id) {
   const stat = fs.statSync(full);
   const cached = cache.get(id);
   if (cached && cached.mtimeMs === stat.mtimeMs) return cached.text;
-  const text = fs.readFileSync(full, 'utf8');
+  let text = fs.readFileSync(full, 'utf8');
+  
+  // Add AI Agent system instructions
+  try {
+    const agentSystemPath = path.join(MODELS_DIR, 'agent-system.md');
+    if (fs.existsSync(agentSystemPath)) {
+      const agentSystem = fs.readFileSync(agentSystemPath, 'utf8');
+      text = agentSystem + '\n\n---\n\n' + text;
+    }
+  } catch {
+    // If agent-system.md doesn't exist, continue without it
+  }
+  
   cache.set(id, { mtimeMs: stat.mtimeMs, text });
   return text;
 }
