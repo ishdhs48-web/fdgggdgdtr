@@ -1,22 +1,22 @@
 @echo off
 chcp 65001 >nul
-echo ═══════════════════════════════════════════════════════
-echo  🚀 AI AGENT - Full PC Control System
-echo ═══════════════════════════════════════════════════════
+echo ============================================
+echo  AI AGENT - Full PC Control System
+echo ============================================
 echo.
-echo  📁 Рабочая директория: %cd%
+echo  Working directory: %cd%
 echo.
 
 cd /d "%~dp0app"
 
-echo  ⏳ Запуск сервера...
+echo  Starting server...
 echo.
 
 node server.mjs
 
 echo.
-echo ═══════════════════════════════════════════════════════
-echo  ✅ Сервер запущен!
-echo  🌐 Откройте в браузере: http://localhost:8770
-echo ═══════════════════════════════════════════════════════
+echo ============================================
+echo  Server started!
+echo  Open in browser: http://localhost:8770
+echo ============================================
 echo.
